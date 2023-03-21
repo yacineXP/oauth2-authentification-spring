@@ -38,6 +38,8 @@ The "o2auth-authentification-spring" project is a demonstration of how to secure
 
 ## ⚙️ How it Works
 
+[![Screenshot-from-2023-03-21-11-45-07.png](https://i.postimg.cc/MGhKS9sG/Screenshot-from-2023-03-21-11-45-07.png)](https://postimg.cc/8FmVdmg8)
+
 The project demonstrates how to secure a RESTful API with OAuth 2 using Spring Security. An authorization server is created to authenticate and authorize clients, and a resource server is added to the API to secure the endpoints. The project also shows how to consume OAuth 2–secured APIs.
 
 
