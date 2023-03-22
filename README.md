@@ -46,32 +46,56 @@ The project demonstrates how to secure a RESTful API with OAuth 2 using Spring S
 <div id="code-examples"></div>
 
 ## 💻 Code Examples
-Here's an example of how to configure an authorization server in Spring Security:
+**1. An example creating a RegisteredClient for OAuth2 Client Registration:**
 ```java
-@Configuration
-@EnableAuthorizationServer
-public class AuthorizationServerConfig extends AuthorizationServerConfigurerAdapter {
-
-    @Autowired
-    private AuthenticationManager authenticationManager;
-
-    @Autowired
-    private DataSource dataSource;
-
-    @Override
-    public void configure(ClientDetailsServiceConfigurer clients) throws Exception {
-        clients.jdbc(dataSource);
-    }
-
-    @Override
-    public void configure(AuthorizationServerEndpointsConfigurer endpoints) throws Exception {
-        endpoints.authenticationManager(authenticationManager);
-    }
-
-}
+  @Bean
+  public RegisteredClientRepository registeredClientRepository(
+          PasswordEncoder passwordEncoder) {
+    RegisteredClient registeredClient =
+      RegisteredClient.withId(UUID.randomUUID().toString())
+        .clientId("taco-admin-client")
+        .clientSecret(passwordEncoder.encode("secret"))
+        .clientAuthenticationMethod(
+                ClientAuthenticationMethod.CLIENT_SECRET_BASIC)
+        .authorizationGrantType(AuthorizationGrantType.AUTHORIZATION_CODE)
+        .authorizationGrantType(AuthorizationGrantType.REFRESH_TOKEN)
+        .redirectUri(
+            "http://127.0.0.1:9090/login/oauth2/code/taco-admin-client")
+        .scope("writeIngredients")
+        .scope("deleteIngredients")
+        .scope(OidcScopes.OPENID)
+        .clientSettings(
+            clientSettings -> clientSettings.requireUserConsent(true))
+        .build();
+    return new InMemoryRegisteredClientRepository(registeredClient);
+  }
 ```
-This code snippet shows how to configure an **authorization server** using Spring Security and the ```@EnableAuthorizationServer``` annotation. The ```@Autowired``` annotation is used to inject dependencies, such as the AuthenticationManager and DataSource.
+This code snippet demonstrates how to create a ```RegisteredClient``` object for OAuth2 client registration and define a bean for ```RegisteredClientRepository```. The ```PasswordEncoder``` is injected as a dependency to the ```registeredClientRepository``` method.
 
+The ```RegisteredClient``` object is initialized with a randomly generated ID and the client details such as ```clientId```, ```clientSecret```, ```clientAuthenticationMethod```, ```authorizationGrantType```, ```redirectUri```, ```scope``` and ```clientSettings```.
+
+The ```InMemoryRegisteredClientRepository``` implementation is used to return the ```RegisteredClient``` object.
+
+This code can be used as a reference for implementing OAuth2 client registration in Spring applications.
+
+**2.An exemple of configuring Default Security Filter Chain with OAuth2 Login:**
+```java
+  @Bean
+  SecurityFilterChain defaultSecurityFilterChain(HttpSecurity http) throws Exception {
+    http
+      .authorizeRequests(
+          authorizeRequests -> authorizeRequests.anyRequest().authenticated()
+      )
+      .oauth2Login(
+        oauth2Login ->
+        oauth2Login.loginPage("/oauth2/authorization/taco-admin-client"))
+      .oauth2Client(withDefaults());
+    return http.build();
+  }
+```
+This code snippet defines a ```SecurityFilterChain``` bean to configure the default security filter chain in a Spring application. The ```HttpSecurity``` object is injected as a dependency to the ```defaultSecurityFilterChain``` method.
+
+The ```http``` object is used to configure the authorization and authentication settings for the application. The ```authorizeRequests``` method is used to specify that any request must be authenticated. The ```oauth2Login``` method is used to enable OAuth2 login and set the login page URL to "/oauth2/authorization/taco-admin-clien". The ```oauth2Client``` method is used to configure the OAuth2 client with default settings.
 
 <div id="acknowledgements"></div>
 
